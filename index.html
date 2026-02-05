@@ -1,0 +1,1261 @@
+<!doctype html>
+<html lang="en" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>InvoiceFlow</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="/_sdk/data_sdk.js"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&amp;family=Playfair+Display:wght@500;600;700&amp;display=swap" rel="stylesheet">
+  <style>
+    body {
+      box-sizing: border-box;
+    }
+    * {
+      font-family: 'DM Sans', sans-serif;
+    }
+    .font-display {
+      font-family: 'Playfair Display', serif;
+    }
+    .gradient-mesh {
+      background: 
+        radial-gradient(at 20% 20%, #1e3a5f15 0px, transparent 50%),
+        radial-gradient(at 80% 80%, #0d948810 0px, transparent 50%),
+        radial-gradient(at 40% 60%, #1e3a5f08 0px, transparent 50%);
+    }
+    .card-shadow {
+      box-shadow: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
+    }
+    .card-shadow-hover:hover {
+      box-shadow: 0 4px 12px rgba(0,0,0,0.08), 0 8px 24px rgba(0,0,0,0.04);
+    }
+    .stat-card {
+      background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .animate-fade-in {
+      animation: fadeIn 0.4s ease-out forwards;
+    }
+    .stagger-1 { animation-delay: 0.05s; }
+    .stagger-2 { animation-delay: 0.1s; }
+    .stagger-3 { animation-delay: 0.15s; }
+    .stagger-4 { animation-delay: 0.2s; }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #0d9488;
+      box-shadow: 0 0 0 3px rgba(13, 148, 136, 0.1);
+    }
+    .scrollbar-thin::-webkit-scrollbar {
+      width: 6px;
+    }
+    .scrollbar-thin::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+    .scrollbar-thin::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 3px;
+    }
+    .invoice-preview {
+      background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
+    }
+  </style>
+  <style>@view-transition { navigation: auto; }</style>
+ </head>
+ <body class="h-full bg-slate-50">
+  <div id="app" class="h-full overflow-auto scrollbar-thin"><!-- Navigation -->
+   <nav class="sticky top-0 z-50 bg-white/95 backdrop-blur-sm border-b border-slate-200/80">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+     <div class="flex justify-between items-center h-16">
+      <div class="flex items-center gap-3">
+       <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-teal-500 to-teal-600 flex items-center justify-center shadow-lg shadow-teal-500/20">
+        <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+        </svg>
+       </div>
+       <div>
+        <h1 id="nav-company" class="font-display text-xl font-semibold text-slate-800">InvoiceFlow</h1>
+        <p id="nav-tagline" class="text-xs text-slate-500 -mt-0.5">Professional invoicing</p>
+       </div>
+      </div>
+      <div class="hidden md:flex items-center gap-1"><button onclick="showView('dashboard')" id="nav-dashboard" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">Dashboard</button> <button onclick="showView('invoices')" id="nav-invoices" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">Invoices</button> <button onclick="showView('clients')" id="nav-clients" class="nav-btn px-4 py-2 rounded-lg text-sm font-medium text-slate-600 hover:bg-slate-100 transition-colors">Clients</button>
+      </div><button onclick="showView('create')" class="flex items-center gap-2 px-4 py-2 bg-teal-600 hover:bg-teal-700 text-white text-sm font-medium rounded-lg transition-all shadow-md shadow-teal-600/20 hover:shadow-lg hover:shadow-teal-600/30">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+       </svg><span class="hidden sm:inline">New Invoice</span> </button>
+     </div>
+    </div><!-- Mobile Nav -->
+    <div class="md:hidden flex border-t border-slate-100 bg-white"><button onclick="showView('dashboard')" id="nav-mobile-dashboard" class="nav-btn flex-1 py-3 text-xs font-medium text-slate-500 hover:text-teal-600 hover:bg-teal-50 transition-colors">Dashboard</button> <button onclick="showView('invoices')" id="nav-mobile-invoices" class="nav-btn flex-1 py-3 text-xs font-medium text-slate-500 hover:text-teal-600 hover:bg-teal-50 transition-colors">Invoices</button> <button onclick="showView('clients')" id="nav-mobile-clients" class="nav-btn flex-1 py-3 text-xs font-medium text-slate-500 hover:text-teal-600 hover:bg-teal-50 transition-colors">Clients</button>
+    </div>
+   </nav><!-- Main Content -->
+   <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8"><!-- Dashboard View -->
+    <div id="view-dashboard" class="view">
+     <div class="mb-8">
+      <h2 class="font-display text-2xl sm:text-3xl font-semibold text-slate-800">Dashboard</h2>
+      <p class="text-slate-500 mt-1">Your financial overview at a glance</p>
+     </div><!-- Stats Grid -->
+     <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+      <div class="stat-card rounded-2xl p-5 border border-slate-200/60 card-shadow animate-fade-in stagger-1">
+       <div class="flex items-center gap-3 mb-3">
+        <div class="w-10 h-10 rounded-xl bg-teal-50 flex items-center justify-center">
+         <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+         </svg>
+        </div>
+       </div>
+       <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">Total Revenue</p>
+       <p id="stat-revenue" class="text-2xl font-semibold text-slate-800 mt-1">$0.00</p>
+      </div>
+      <div class="stat-card rounded-2xl p-5 border border-slate-200/60 card-shadow animate-fade-in stagger-2">
+       <div class="flex items-center gap-3 mb-3">
+        <div class="w-10 h-10 rounded-xl bg-amber-50 flex items-center justify-center">
+         <svg class="w-5 h-5 text-amber-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+         </svg>
+        </div>
+       </div>
+       <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">Pending</p>
+       <p id="stat-pending" class="text-2xl font-semibold text-slate-800 mt-1">$0.00</p>
+      </div>
+      <div class="stat-card rounded-2xl p-5 border border-slate-200/60 card-shadow animate-fade-in stagger-3">
+       <div class="flex items-center gap-3 mb-3">
+        <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+         <svg class="w-5 h-5 text-emerald-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+         </svg>
+        </div>
+       </div>
+       <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">Paid</p>
+       <p id="stat-paid" class="text-2xl font-semibold text-slate-800 mt-1">$0.00</p>
+      </div>
+      <div class="stat-card rounded-2xl p-5 border border-slate-200/60 card-shadow animate-fade-in stagger-4">
+       <div class="flex items-center gap-3 mb-3">
+        <div class="w-10 h-10 rounded-xl bg-rose-50 flex items-center justify-center">
+         <svg class="w-5 h-5 text-rose-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+         </svg>
+        </div>
+       </div>
+       <p class="text-xs font-medium text-slate-500 uppercase tracking-wide">Overdue</p>
+       <p id="stat-overdue" class="text-2xl font-semibold text-slate-800 mt-1">$0.00</p>
+      </div>
+     </div><!-- Charts Row -->
+     <div class="grid lg:grid-cols-3 gap-6 mb-8"><!-- Revenue Chart -->
+      <div class="lg:col-span-2 bg-white rounded-2xl p-6 border border-slate-200/60 card-shadow">
+       <h3 class="font-semibold text-slate-800 mb-4">Revenue Overview</h3>
+       <div id="revenue-chart" class="h-48 flex items-end justify-between gap-2 px-2"><!-- Chart bars will be generated -->
+       </div>
+       <div class="flex justify-between text-xs text-slate-400 mt-2 px-2"><span>Jan</span><span>Feb</span><span>Mar</span><span>Apr</span><span>May</span><span>Jun</span>
+       </div>
+      </div><!-- Status Breakdown -->
+      <div class="bg-white rounded-2xl p-6 border border-slate-200/60 card-shadow">
+       <h3 class="font-semibold text-slate-800 mb-4">Invoice Status</h3>
+       <div id="status-breakdown" class="space-y-4"><!-- Status items will be generated -->
+       </div>
+      </div>
+     </div><!-- Recent Invoices -->
+     <div class="bg-white rounded-2xl border border-slate-200/60 card-shadow overflow-hidden">
+      <div class="px-6 py-4 border-b border-slate-100 flex justify-between items-center">
+       <h3 class="font-semibold text-slate-800">Recent Invoices</h3><button onclick="showView('invoices')" class="text-sm text-teal-600 hover:text-teal-700 font-medium">View all</button>
+      </div>
+      <div id="recent-invoices" class="divide-y divide-slate-100"><!-- Recent invoices will be listed -->
+      </div>
+     </div>
+    </div><!-- Invoices View -->
+    <div id="view-invoices" class="view hidden">
+     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+      <div>
+       <h2 class="font-display text-2xl sm:text-3xl font-semibold text-slate-800">Invoices</h2>
+       <p class="text-slate-500 mt-1">Manage and track all your invoices</p>
+      </div>
+      <div class="flex gap-2"><select id="filter-status" onchange="filterInvoices()" class="px-4 py-2 border border-slate-200 rounded-lg text-sm text-slate-600 bg-white"> <option value="all">All Status</option> <option value="draft">Draft</option> <option value="pending">Pending</option> <option value="paid">Paid</option> <option value="overdue">Overdue</option> </select>
+      </div>
+     </div>
+     <div id="invoices-list" class="space-y-3"><!-- Invoices will be listed -->
+     </div>
+     <div id="invoices-empty" class="hidden text-center py-16">
+      <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
+       <svg class="w-10 h-10 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+       </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-slate-800 mb-2">No invoices yet</h3>
+      <p class="text-slate-500 mb-6">Create your first invoice to get started</p><button onclick="showView('create')" class="px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-all shadow-md"> Create Invoice </button>
+     </div>
+    </div><!-- Clients View -->
+    <div id="view-clients" class="view hidden">
+     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+      <div>
+       <h2 class="font-display text-2xl sm:text-3xl font-semibold text-slate-800">Clients</h2>
+       <p class="text-slate-500 mt-1">Your client directory</p>
+      </div>
+     </div>
+     <div id="clients-list" class="grid sm:grid-cols-2 lg:grid-cols-3 gap-4"><!-- Clients will be listed -->
+     </div>
+     <div id="clients-empty" class="hidden text-center py-16">
+      <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
+       <svg class="w-10 h-10 text-slate-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+       </svg>
+      </div>
+      <h3 class="text-lg font-semibold text-slate-800 mb-2">No clients yet</h3>
+      <p class="text-slate-500 mb-6">Clients are added automatically when you create invoices</p><button onclick="showView('create')" class="px-6 py-3 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-all shadow-md"> Create Invoice </button>
+     </div>
+    </div><!-- Create Invoice View -->
+    <div id="view-create" class="view hidden">
+     <div class="mb-8"><button onclick="showView('invoices')" class="flex items-center gap-2 text-slate-500 hover:text-slate-700 mb-4 transition-colors">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+       </svg> Back to Invoices </button>
+      <h2 id="create-title" class="font-display text-2xl sm:text-3xl font-semibold text-slate-800">Create Invoice</h2>
+      <p class="text-slate-500 mt-1">Fill in the details below</p>
+     </div>
+     <form id="invoice-form" onsubmit="handleInvoiceSubmit(event)" class="grid lg:grid-cols-2 gap-8">
+      <div class="space-y-6"><!-- Client Details -->
+       <div class="bg-white rounded-2xl p-6 border border-slate-200/60 card-shadow">
+        <h3 class="font-semibold text-slate-800 mb-4 flex items-center gap-2">
+         <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+         </svg> Client Details</h3>
+        <div class="space-y-4">
+         <div><label for="client_name" class="block text-sm font-medium text-slate-700 mb-1">Client Name *</label> <input type="text" id="client_name" name="client_name" required class="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400" placeholder="John Doe">
+         </div>
+         <div><label for="client_email" class="block text-sm font-medium text-slate-700 mb-1">Email Address *</label> <input type="email" id="client_email" name="client_email" required class="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400" placeholder="john@example.com">
+         </div>
+         <div><label for="client_company" class="block text-sm font-medium text-slate-700 mb-1">Company</label> <input type="text" id="client_company" name="client_company" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400" placeholder="Acme Inc.">
+         </div>
+        </div>
+       </div><!-- Invoice Details -->
+       <div class="bg-white rounded-2xl p-6 border border-slate-200/60 card-shadow">
+        <h3 class="font-semibold text-slate-800 mb-4 flex items-center gap-2">
+         <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+         </svg> Invoice Details</h3>
+        <div class="space-y-4">
+         <div class="grid grid-cols-2 gap-4">
+          <div><label for="invoice_number" class="block text-sm font-medium text-slate-700 mb-1">Invoice # *</label> <input type="text" id="invoice_number" name="invoice_number" required class="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400" placeholder="INV-001">
+          </div>
+          <div><label for="due_date" class="block text-sm font-medium text-slate-700 mb-1">Due Date *</label> <input type="date" id="due_date" name="due_date" required class="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-slate-800">
+          </div>
+         </div>
+         <div><label for="project_name" class="block text-sm font-medium text-slate-700 mb-1">Project Name</label> <input type="text" id="project_name" name="project_name" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400" placeholder="Website Redesign">
+         </div>
+         <div><label for="status" class="block text-sm font-medium text-slate-700 mb-1">Status</label> <select id="status" name="status" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-slate-800 bg-white"> <option value="draft">Draft</option> <option value="pending" selected>Pending</option> <option value="paid">Paid</option> </select>
+         </div>
+        </div>
+       </div><!-- Line Items -->
+       <div class="bg-white rounded-2xl p-6 border border-slate-200/60 card-shadow">
+        <h3 class="font-semibold text-slate-800 mb-4 flex items-center gap-2">
+         <svg class="w-5 h-5 text-teal-600" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16" />
+         </svg> Line Items</h3>
+        <div id="line-items" class="space-y-3"><!-- Line items will be added here -->
+        </div><button type="button" onclick="addLineItem()" class="mt-4 flex items-center gap-2 text-teal-600 hover:text-teal-700 font-medium text-sm transition-colors">
+         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+         </svg> Add Line Item </button>
+        <div class="mt-6 pt-4 border-t border-slate-100">
+         <div class="flex justify-between items-center"><span class="font-semibold text-slate-800">Total</span> <span id="invoice-total" class="text-2xl font-semibold text-teal-600">$0.00</span>
+         </div>
+        </div>
+       </div><!-- Notes -->
+       <div class="bg-white rounded-2xl p-6 border border-slate-200/60 card-shadow">
+        <h3 class="font-semibold text-slate-800 mb-4">Notes</h3><textarea id="notes" name="notes" rows="3" class="w-full px-4 py-2.5 border border-slate-200 rounded-lg text-slate-800 placeholder-slate-400 resize-none" placeholder="Additional notes or payment terms..."></textarea>
+       </div>
+      </div><!-- Preview Panel -->
+      <div class="lg:sticky lg:top-24 h-fit">
+       <div class="invoice-preview rounded-2xl p-8 border border-slate-200/60 card-shadow">
+        <div class="flex justify-between items-start mb-8">
+         <div>
+          <h3 id="preview-company" class="font-display text-xl font-semibold text-slate-800">InvoiceFlow</h3>
+          <p class="text-sm text-slate-500">Invoice</p>
+         </div>
+         <div class="text-right">
+          <p id="preview-number" class="font-semibold text-slate-800">INV-001</p>
+          <p id="preview-date" class="text-sm text-slate-500">Due: --</p>
+         </div>
+        </div>
+        <div class="mb-8">
+         <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Bill To</p>
+         <p id="preview-client" class="font-medium text-slate-800">Client Name</p>
+         <p id="preview-email" class="text-sm text-slate-500">client@email.com</p>
+        </div>
+        <div class="border-t border-slate-200 pt-4 mb-4">
+         <div class="flex justify-between text-xs font-medium text-slate-500 uppercase tracking-wide mb-2"><span>Description</span> <span>Amount</span>
+         </div>
+         <div id="preview-items" class="space-y-2"><!-- Preview items -->
+         </div>
+        </div>
+        <div class="border-t border-slate-200 pt-4">
+         <div class="flex justify-between items-center"><span class="font-semibold text-slate-800">Total Due</span> <span id="preview-total" class="text-xl font-bold text-teal-600">$0.00</span>
+         </div>
+        </div>
+        <div id="preview-notes" class="mt-6 pt-4 border-t border-slate-100 hidden">
+         <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-1">Notes</p>
+         <p id="preview-notes-text" class="text-sm text-slate-600"></p>
+        </div>
+       </div>
+       <div class="mt-4 flex gap-3"><button type="submit" id="submit-btn" class="flex-1 py-3 bg-teal-600 hover:bg-teal-700 text-white font-medium rounded-lg transition-all shadow-md"> Save Invoice </button> <button type="button" onclick="exportPDF()" class="px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg transition-all">
+         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+         </svg></button>
+       </div>
+      </div>
+     </form>
+    </div><!-- Invoice Detail View -->
+    <div id="view-detail" class="view hidden">
+     <div class="mb-8"><button onclick="showView('invoices')" class="flex items-center gap-2 text-slate-500 hover:text-slate-700 mb-4 transition-colors">
+       <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7" />
+       </svg> Back to Invoices </button>
+     </div>
+     <div class="grid lg:grid-cols-3 gap-8">
+      <div class="lg:col-span-2">
+       <div id="detail-invoice" class="invoice-preview rounded-2xl p-8 border border-slate-200/60 card-shadow"><!-- Invoice detail will be rendered -->
+       </div>
+      </div>
+      <div class="space-y-4">
+       <div class="bg-white rounded-2xl p-6 border border-slate-200/60 card-shadow">
+        <h3 class="font-semibold text-slate-800 mb-4">Actions</h3>
+        <div class="space-y-3"><button onclick="editCurrentInvoice()" class="w-full py-2.5 px-4 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-lg transition-all flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg> Edit Invoice </button> <button onclick="markAsPaid()" id="mark-paid-btn" class="w-full py-2.5 px-4 bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-medium rounded-lg transition-all flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg> Mark as Paid </button> <button onclick="exportDetailPDF()" class="w-full py-2.5 px-4 bg-teal-50 hover:bg-teal-100 text-teal-700 font-medium rounded-lg transition-all flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+          </svg> Export PDF </button> <button onclick="confirmDeleteInvoice()" id="delete-invoice-btn" class="w-full py-2.5 px-4 bg-rose-50 hover:bg-rose-100 text-rose-700 font-medium rounded-lg transition-all flex items-center justify-center gap-2">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+          </svg> Delete Invoice </button>
+        </div>
+       </div>
+       <div id="payment-status-card" class="bg-white rounded-2xl p-6 border border-slate-200/60 card-shadow"><!-- Payment status will be shown -->
+       </div>
+      </div>
+     </div>
+    </div>
+   </main><!-- Toast Notification -->
+   <div id="toast" class="fixed bottom-4 right-4 transform translate-y-20 opacity-0 transition-all duration-300 z-50">
+    <div class="bg-slate-800 text-white px-6 py-3 rounded-lg shadow-xl flex items-center gap-3">
+     <svg id="toast-icon" class="w-5 h-5 text-emerald-400" fill="none" stroke="currentColor" viewbox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+     </svg><span id="toast-message">Success!</span>
+    </div>
+   </div>
+  </div>
+  <script>
+    // State
+    let allData = [];
+    let currentInvoiceId = null;
+    let editingInvoiceId = null;
+    let lineItemCount = 0;
+    let currentView = 'dashboard';
+    
+    const defaultConfig = {
+      company_name: 'InvoiceFlow',
+      tagline: 'Professional invoicing made simple',
+      primary_color: '#0d9488',
+      background_color: '#f8fafc',
+      text_color: '#1e293b',
+      surface_color: '#ffffff',
+      accent_color: '#f59e0b'
+    };
+    
+    // Data Handler
+    const dataHandler = {
+      onDataChanged(data) {
+        allData = data.filter(d => d.type === 'invoice');
+        updateDashboard();
+        updateInvoicesList();
+        updateClientsList();
+        if (currentView === 'detail' && currentInvoiceId) {
+          const invoice = allData.find(i => i.__backendId === currentInvoiceId);
+          if (invoice) renderInvoiceDetail(invoice);
+        }
+      }
+    };
+    
+    // Initialize
+    async function init() {
+      // Init Element SDK
+      if (window.elementSdk) {
+        window.elementSdk.init({
+          defaultConfig,
+          onConfigChange: async (config) => {
+            applyConfig(config);
+          },
+          mapToCapabilities: (config) => ({
+            recolorables: [
+              {
+                get: () => config.background_color || defaultConfig.background_color,
+                set: (v) => window.elementSdk.setConfig({ background_color: v })
+              },
+              {
+                get: () => config.surface_color || defaultConfig.surface_color,
+                set: (v) => window.elementSdk.setConfig({ surface_color: v })
+              },
+              {
+                get: () => config.text_color || defaultConfig.text_color,
+                set: (v) => window.elementSdk.setConfig({ text_color: v })
+              },
+              {
+                get: () => config.primary_color || defaultConfig.primary_color,
+                set: (v) => window.elementSdk.setConfig({ primary_color: v })
+              },
+              {
+                get: () => config.accent_color || defaultConfig.accent_color,
+                set: (v) => window.elementSdk.setConfig({ accent_color: v })
+              }
+            ],
+            borderables: [],
+            fontEditable: undefined,
+            fontSizeable: undefined
+          }),
+          mapToEditPanelValues: (config) => new Map([
+            ['company_name', config.company_name || defaultConfig.company_name],
+            ['tagline', config.tagline || defaultConfig.tagline]
+          ])
+        });
+      }
+      
+      // Init Data SDK
+      if (window.dataSdk) {
+        const result = await window.dataSdk.init(dataHandler);
+        if (!result.isOk) {
+          showToast('Failed to initialize data', 'error');
+        }
+      }
+      
+      // Setup form
+      addLineItem();
+      setDefaultDueDate();
+      generateInvoiceNumber();
+      updateNav();
+    }
+    
+    function applyConfig(config) {
+      const companyName = config.company_name || defaultConfig.company_name;
+      const tagline = config.tagline || defaultConfig.tagline;
+      const primary = config.primary_color || defaultConfig.primary_color;
+      const bg = config.background_color || defaultConfig.background_color;
+      const text = config.text_color || defaultConfig.text_color;
+      const surface = config.surface_color || defaultConfig.surface_color;
+      const accent = config.accent_color || defaultConfig.accent_color;
+      
+      document.getElementById('nav-company').textContent = companyName;
+      document.getElementById('nav-tagline').textContent = tagline;
+      document.getElementById('preview-company').textContent = companyName;
+      
+      document.body.style.backgroundColor = bg;
+      
+      // Apply colors to elements
+      document.querySelectorAll('.stat-card, .bg-white').forEach(el => {
+        el.style.backgroundColor = surface;
+      });
+      
+      document.querySelectorAll('.font-display, .font-semibold').forEach(el => {
+        if (!el.classList.contains('text-white')) {
+          el.style.color = text;
+        }
+      });
+      
+      document.querySelectorAll('.bg-teal-600').forEach(el => {
+        el.style.backgroundColor = primary;
+      });
+      
+      document.querySelectorAll('.text-teal-600').forEach(el => {
+        el.style.color = primary;
+      });
+    }
+    
+    // View Management
+    function showView(view) {
+      document.querySelectorAll('.view').forEach(v => v.classList.add('hidden'));
+      document.getElementById(`view-${view}`).classList.remove('hidden');
+      currentView = view;
+      updateNav();
+      
+      if (view === 'create' && !editingInvoiceId) {
+        resetForm();
+      }
+    }
+    
+    function updateNav() {
+      document.querySelectorAll('.nav-btn').forEach(btn => {
+        btn.classList.remove('bg-teal-50', 'text-teal-700');
+      });
+      
+      const activeBtn = document.getElementById(`nav-${currentView}`);
+      const activeMobileBtn = document.getElementById(`nav-mobile-${currentView}`);
+      
+      if (activeBtn) {
+        activeBtn.classList.add('bg-teal-50', 'text-teal-700');
+      }
+      if (activeMobileBtn) {
+        activeMobileBtn.classList.add('bg-teal-50', 'text-teal-700');
+      }
+    }
+    
+    // Dashboard
+    function updateDashboard() {
+      const invoices = allData;
+      
+      let totalRevenue = 0;
+      let pending = 0;
+      let paid = 0;
+      let overdue = 0;
+      
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      invoices.forEach(inv => {
+        const amount = parseFloat(inv.amount) || 0;
+        totalRevenue += amount;
+        
+        if (inv.status === 'paid') {
+          paid += amount;
+        } else if (inv.status === 'pending' || inv.status === 'draft') {
+          const dueDate = new Date(inv.due_date);
+          if (dueDate < today && inv.status !== 'draft') {
+            overdue += amount;
+          } else {
+            pending += amount;
+          }
+        }
+      });
+      
+      document.getElementById('stat-revenue').textContent = formatCurrency(totalRevenue);
+      document.getElementById('stat-pending').textContent = formatCurrency(pending);
+      document.getElementById('stat-paid').textContent = formatCurrency(paid);
+      document.getElementById('stat-overdue').textContent = formatCurrency(overdue);
+      
+      // Revenue Chart
+      renderRevenueChart(invoices);
+      
+      // Status Breakdown
+      renderStatusBreakdown(invoices);
+      
+      // Recent Invoices
+      renderRecentInvoices(invoices.slice(-5).reverse());
+    }
+    
+    function renderRevenueChart(invoices) {
+      const container = document.getElementById('revenue-chart');
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'];
+      const monthData = [0, 0, 0, 0, 0, 0];
+      
+      invoices.forEach(inv => {
+        if (inv.status === 'paid' && inv.paid_at) {
+          const date = new Date(inv.paid_at);
+          const monthIndex = date.getMonth();
+          if (monthIndex < 6) {
+            monthData[monthIndex] += parseFloat(inv.amount) || 0;
+          }
+        }
+      });
+      
+      const maxValue = Math.max(...monthData, 1);
+      
+      container.innerHTML = monthData.map((value, i) => {
+        const height = Math.max((value / maxValue) * 100, 4);
+        return `
+          <div class="flex-1 flex flex-col items-center">
+            <div class="w-full bg-teal-100 rounded-t-lg relative overflow-hidden" style="height: ${height}%">
+              <div class="absolute inset-0 bg-gradient-to-t from-teal-500 to-teal-400"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function renderStatusBreakdown(invoices) {
+      const container = document.getElementById('status-breakdown');
+      const total = invoices.length || 1;
+      
+      const counts = {
+        draft: invoices.filter(i => i.status === 'draft').length,
+        pending: invoices.filter(i => i.status === 'pending').length,
+        paid: invoices.filter(i => i.status === 'paid').length,
+        overdue: invoices.filter(i => {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          return i.status === 'pending' && new Date(i.due_date) < today;
+        }).length
+      };
+      
+      const statusConfig = {
+        paid: { color: 'emerald', label: 'Paid' },
+        pending: { color: 'amber', label: 'Pending' },
+        draft: { color: 'slate', label: 'Draft' },
+        overdue: { color: 'rose', label: 'Overdue' }
+      };
+      
+      container.innerHTML = Object.entries(counts).map(([status, count]) => {
+        const config = statusConfig[status];
+        const percent = Math.round((count / total) * 100);
+        return `
+          <div>
+            <div class="flex justify-between text-sm mb-1">
+              <span class="text-slate-600">${config.label}</span>
+              <span class="font-medium text-slate-800">${count}</span>
+            </div>
+            <div class="h-2 bg-slate-100 rounded-full overflow-hidden">
+              <div class="h-full bg-${config.color}-500 rounded-full transition-all" style="width: ${percent}%"></div>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function renderRecentInvoices(invoices) {
+      const container = document.getElementById('recent-invoices');
+      
+      if (invoices.length === 0) {
+        container.innerHTML = `
+          <div class="px-6 py-8 text-center text-slate-500">
+            No invoices yet. Create your first invoice to get started.
+          </div>
+        `;
+        return;
+      }
+      
+      container.innerHTML = invoices.map(inv => `
+        <div class="px-6 py-4 flex items-center justify-between hover:bg-slate-50 cursor-pointer transition-colors" onclick="viewInvoice('${inv.__backendId}')">
+          <div class="flex items-center gap-4">
+            <div class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-600 font-medium">
+              ${getInitials(inv.client_name)}
+            </div>
+            <div>
+              <p class="font-medium text-slate-800">${escapeHtml(inv.client_name)}</p>
+              <p class="text-sm text-slate-500">${escapeHtml(inv.invoice_number)}</p>
+            </div>
+          </div>
+          <div class="text-right">
+            <p class="font-semibold text-slate-800">${formatCurrency(inv.amount)}</p>
+            <span class="inline-block px-2 py-0.5 text-xs font-medium rounded-full ${getStatusClass(inv)}">${getStatusLabel(inv)}</span>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    // Invoices List
+    function updateInvoicesList() {
+      const container = document.getElementById('invoices-list');
+      const emptyState = document.getElementById('invoices-empty');
+      const filter = document.getElementById('filter-status').value;
+      
+      let invoices = [...allData];
+      
+      if (filter !== 'all') {
+        if (filter === 'overdue') {
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          invoices = invoices.filter(i => i.status === 'pending' && new Date(i.due_date) < today);
+        } else {
+          invoices = invoices.filter(i => i.status === filter);
+        }
+      }
+      
+      if (invoices.length === 0) {
+        container.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      }
+      
+      emptyState.classList.add('hidden');
+      
+      container.innerHTML = invoices.map(inv => `
+        <div class="bg-white rounded-xl p-5 border border-slate-200/60 card-shadow card-shadow-hover cursor-pointer transition-all" onclick="viewInvoice('${inv.__backendId}')">
+          <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-slate-100 to-slate-50 flex items-center justify-center text-slate-600 font-semibold">
+                ${getInitials(inv.client_name)}
+              </div>
+              <div>
+                <p class="font-semibold text-slate-800">${escapeHtml(inv.client_name)}</p>
+                <p class="text-sm text-slate-500">${escapeHtml(inv.invoice_number)} • ${escapeHtml(inv.project_name || 'No project')}</p>
+              </div>
+            </div>
+            <div class="flex items-center gap-4 sm:gap-8">
+              <div class="text-left sm:text-right">
+                <p class="text-lg font-semibold text-slate-800">${formatCurrency(inv.amount)}</p>
+                <p class="text-sm text-slate-500">Due ${formatDate(inv.due_date)}</p>
+              </div>
+              <span class="px-3 py-1 text-xs font-medium rounded-full ${getStatusClass(inv)}">${getStatusLabel(inv)}</span>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    function filterInvoices() {
+      updateInvoicesList();
+    }
+    
+    // Clients List
+    function updateClientsList() {
+      const container = document.getElementById('clients-list');
+      const emptyState = document.getElementById('clients-empty');
+      
+      const clientsMap = new Map();
+      
+      allData.forEach(inv => {
+        const key = inv.client_email;
+        if (!clientsMap.has(key)) {
+          clientsMap.set(key, {
+            name: inv.client_name,
+            email: inv.client_email,
+            company: inv.client_company,
+            invoiceCount: 0,
+            totalAmount: 0,
+            paidAmount: 0
+          });
+        }
+        const client = clientsMap.get(key);
+        client.invoiceCount++;
+        client.totalAmount += parseFloat(inv.amount) || 0;
+        if (inv.status === 'paid') {
+          client.paidAmount += parseFloat(inv.amount) || 0;
+        }
+      });
+      
+      const clients = Array.from(clientsMap.values());
+      
+      if (clients.length === 0) {
+        container.innerHTML = '';
+        emptyState.classList.remove('hidden');
+        return;
+      }
+      
+      emptyState.classList.add('hidden');
+      
+      container.innerHTML = clients.map(client => `
+        <div class="bg-white rounded-xl p-5 border border-slate-200/60 card-shadow">
+          <div class="flex items-start gap-4">
+            <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-100 to-teal-50 flex items-center justify-center text-teal-700 font-semibold">
+              ${getInitials(client.name)}
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="font-semibold text-slate-800 truncate">${escapeHtml(client.name)}</p>
+              <p class="text-sm text-slate-500 truncate">${escapeHtml(client.email)}</p>
+              ${client.company ? `<p class="text-sm text-slate-400 truncate">${escapeHtml(client.company)}</p>` : ''}
+            </div>
+          </div>
+          <div class="mt-4 pt-4 border-t border-slate-100 grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-xs text-slate-500">Total Billed</p>
+              <p class="font-semibold text-slate-800">${formatCurrency(client.totalAmount)}</p>
+            </div>
+            <div>
+              <p class="text-xs text-slate-500">Invoices</p>
+              <p class="font-semibold text-slate-800">${client.invoiceCount}</p>
+            </div>
+          </div>
+        </div>
+      `).join('');
+    }
+    
+    // Invoice Form
+    function addLineItem() {
+      const container = document.getElementById('line-items');
+      const index = lineItemCount++;
+      
+      const itemDiv = document.createElement('div');
+      itemDiv.className = 'line-item grid grid-cols-12 gap-3 items-start';
+      itemDiv.dataset.index = index;
+      itemDiv.innerHTML = `
+        <div class="col-span-6">
+          <input type="text" name="item_desc_${index}" placeholder="Description" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 placeholder-slate-400" oninput="updatePreview()">
+        </div>
+        <div class="col-span-2">
+          <input type="number" name="item_qty_${index}" placeholder="Qty" value="1" min="1" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800 text-center" oninput="updatePreview()">
+        </div>
+        <div class="col-span-3">
+          <input type="number" name="item_rate_${index}" placeholder="Rate" step="0.01" min="0" class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm text-slate-800" oninput="updatePreview()">
+        </div>
+        <div class="col-span-1 flex justify-center">
+          <button type="button" onclick="removeLineItem(${index})" class="p-2 text-slate-400 hover:text-rose-500 transition-colors">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+            </svg>
+          </button>
+        </div>
+      `;
+      
+      container.appendChild(itemDiv);
+      updatePreview();
+    }
+    
+    function removeLineItem(index) {
+      const item = document.querySelector(`.line-item[data-index="${index}"]`);
+      if (item && document.querySelectorAll('.line-item').length > 1) {
+        item.remove();
+        updatePreview();
+      }
+    }
+    
+    function updatePreview() {
+      const clientName = document.getElementById('client_name').value || 'Client Name';
+      const clientEmail = document.getElementById('client_email').value || 'client@email.com';
+      const invoiceNumber = document.getElementById('invoice_number').value || 'INV-001';
+      const dueDate = document.getElementById('due_date').value;
+      const notes = document.getElementById('notes').value;
+      
+      document.getElementById('preview-client').textContent = clientName;
+      document.getElementById('preview-email').textContent = clientEmail;
+      document.getElementById('preview-number').textContent = invoiceNumber;
+      document.getElementById('preview-date').textContent = dueDate ? `Due: ${formatDate(dueDate)}` : 'Due: --';
+      
+      // Line items
+      const items = getLineItems();
+      const previewItems = document.getElementById('preview-items');
+      
+      let total = 0;
+      previewItems.innerHTML = items.map(item => {
+        const subtotal = item.quantity * item.rate;
+        total += subtotal;
+        return `
+          <div class="flex justify-between py-2 border-b border-slate-100 last:border-0">
+            <div>
+              <p class="text-sm text-slate-800">${escapeHtml(item.description) || 'Item'}</p>
+              <p class="text-xs text-slate-500">${item.quantity} × ${formatCurrency(item.rate)}</p>
+            </div>
+            <p class="text-sm font-medium text-slate-800">${formatCurrency(subtotal)}</p>
+          </div>
+        `;
+      }).join('');
+      
+      document.getElementById('invoice-total').textContent = formatCurrency(total);
+      document.getElementById('preview-total').textContent = formatCurrency(total);
+      
+      // Notes
+      const notesSection = document.getElementById('preview-notes');
+      const notesText = document.getElementById('preview-notes-text');
+      if (notes) {
+        notesSection.classList.remove('hidden');
+        notesText.textContent = notes;
+      } else {
+        notesSection.classList.add('hidden');
+      }
+    }
+    
+    function getLineItems() {
+      const items = [];
+      document.querySelectorAll('.line-item').forEach(item => {
+        const index = item.dataset.index;
+        const desc = item.querySelector(`[name="item_desc_${index}"]`)?.value || '';
+        const qty = parseFloat(item.querySelector(`[name="item_qty_${index}"]`)?.value) || 1;
+        const rate = parseFloat(item.querySelector(`[name="item_rate_${index}"]`)?.value) || 0;
+        items.push({ description: desc, quantity: qty, rate: rate });
+      });
+      return items;
+    }
+    
+    async function handleInvoiceSubmit(e) {
+      e.preventDefault();
+      
+      const submitBtn = document.getElementById('submit-btn');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="animate-pulse">Saving...</span>';
+      
+      const items = getLineItems();
+      const total = items.reduce((sum, item) => sum + (item.quantity * item.rate), 0);
+      
+      const invoiceData = {
+        type: 'invoice',
+        invoice_number: document.getElementById('invoice_number').value,
+        client_name: document.getElementById('client_name').value,
+        client_email: document.getElementById('client_email').value,
+        client_company: document.getElementById('client_company').value || '',
+        project_name: document.getElementById('project_name').value || '',
+        amount: total,
+        status: document.getElementById('status').value,
+        due_date: document.getElementById('due_date').value,
+        created_at: new Date().toISOString(),
+        paid_at: document.getElementById('status').value === 'paid' ? new Date().toISOString() : '',
+        notes: document.getElementById('notes').value || '',
+        items: JSON.stringify(items)
+      };
+      
+      try {
+        let result;
+        if (editingInvoiceId) {
+          const existing = allData.find(i => i.__backendId === editingInvoiceId);
+          if (existing) {
+            result = await window.dataSdk.update({ ...existing, ...invoiceData });
+          }
+        } else {
+          if (allData.length >= 999) {
+            showToast('Maximum invoice limit reached', 'error');
+            return;
+          }
+          result = await window.dataSdk.create(invoiceData);
+        }
+        
+        if (result && result.isOk) {
+          showToast(editingInvoiceId ? 'Invoice updated!' : 'Invoice created!');
+          editingInvoiceId = null;
+          showView('invoices');
+        } else {
+          showToast('Failed to save invoice', 'error');
+        }
+      } catch (err) {
+        showToast('An error occurred', 'error');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Save Invoice';
+      }
+    }
+    
+    function resetForm() {
+      document.getElementById('invoice-form').reset();
+      document.getElementById('line-items').innerHTML = '';
+      lineItemCount = 0;
+      addLineItem();
+      setDefaultDueDate();
+      generateInvoiceNumber();
+      editingInvoiceId = null;
+      document.getElementById('create-title').textContent = 'Create Invoice';
+      updatePreview();
+    }
+    
+    function setDefaultDueDate() {
+      const date = new Date();
+      date.setDate(date.getDate() + 30);
+      document.getElementById('due_date').value = date.toISOString().split('T')[0];
+    }
+    
+    function generateInvoiceNumber() {
+      const count = allData.length + 1;
+      document.getElementById('invoice_number').value = `INV-${String(count).padStart(3, '0')}`;
+    }
+    
+    // Invoice Detail
+    function viewInvoice(id) {
+      currentInvoiceId = id;
+      const invoice = allData.find(i => i.__backendId === id);
+      if (invoice) {
+        renderInvoiceDetail(invoice);
+        showView('detail');
+      }
+    }
+    
+    function renderInvoiceDetail(inv) {
+      const container = document.getElementById('detail-invoice');
+      const items = JSON.parse(inv.items || '[]');
+      const companyName = window.elementSdk?.config?.company_name || defaultConfig.company_name;
+      
+      container.innerHTML = `
+        <div class="flex justify-between items-start mb-8">
+          <div>
+            <h3 class="font-display text-2xl font-semibold text-slate-800">${escapeHtml(companyName)}</h3>
+            <p class="text-slate-500">Invoice</p>
+          </div>
+          <div class="text-right">
+            <p class="text-xl font-bold text-slate-800">${escapeHtml(inv.invoice_number)}</p>
+            <p class="text-slate-500">Due ${formatDate(inv.due_date)}</p>
+            <span class="inline-block mt-2 px-3 py-1 text-sm font-medium rounded-full ${getStatusClass(inv)}">${getStatusLabel(inv)}</span>
+          </div>
+        </div>
+        
+        <div class="grid sm:grid-cols-2 gap-8 mb-8">
+          <div>
+            <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Bill To</p>
+            <p class="font-semibold text-slate-800">${escapeHtml(inv.client_name)}</p>
+            <p class="text-slate-600">${escapeHtml(inv.client_email)}</p>
+            ${inv.client_company ? `<p class="text-slate-500">${escapeHtml(inv.client_company)}</p>` : ''}
+          </div>
+          ${inv.project_name ? `
+            <div>
+              <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Project</p>
+              <p class="font-semibold text-slate-800">${escapeHtml(inv.project_name)}</p>
+            </div>
+          ` : ''}
+        </div>
+        
+        <div class="border rounded-xl overflow-hidden mb-6">
+          <table class="w-full">
+            <thead class="bg-slate-50">
+              <tr>
+                <th class="text-left py-3 px-4 text-xs font-medium text-slate-500 uppercase">Description</th>
+                <th class="text-center py-3 px-4 text-xs font-medium text-slate-500 uppercase">Qty</th>
+                <th class="text-right py-3 px-4 text-xs font-medium text-slate-500 uppercase">Rate</th>
+                <th class="text-right py-3 px-4 text-xs font-medium text-slate-500 uppercase">Amount</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-100">
+              ${items.map(item => `
+                <tr>
+                  <td class="py-3 px-4 text-slate-800">${escapeHtml(item.description) || 'Item'}</td>
+                  <td class="py-3 px-4 text-center text-slate-600">${item.quantity}</td>
+                  <td class="py-3 px-4 text-right text-slate-600">${formatCurrency(item.rate)}</td>
+                  <td class="py-3 px-4 text-right font-medium text-slate-800">${formatCurrency(item.quantity * item.rate)}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        </div>
+        
+        <div class="flex justify-end">
+          <div class="w-64">
+            <div class="flex justify-between py-2 border-b border-slate-100">
+              <span class="text-slate-600">Subtotal</span>
+              <span class="font-medium text-slate-800">${formatCurrency(inv.amount)}</span>
+            </div>
+            <div class="flex justify-between py-3">
+              <span class="text-lg font-semibold text-slate-800">Total</span>
+              <span class="text-xl font-bold text-teal-600">${formatCurrency(inv.amount)}</span>
+            </div>
+          </div>
+        </div>
+        
+        ${inv.notes ? `
+          <div class="mt-8 pt-6 border-t border-slate-200">
+            <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Notes</p>
+            <p class="text-slate-600">${escapeHtml(inv.notes)}</p>
+          </div>
+        ` : ''}
+      `;
+      
+      // Update payment status card
+      const statusCard = document.getElementById('payment-status-card');
+      const markPaidBtn = document.getElementById('mark-paid-btn');
+      
+      if (inv.status === 'paid') {
+        markPaidBtn.classList.add('hidden');
+        statusCard.innerHTML = `
+          <div class="flex items-center gap-3 text-emerald-600">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <div>
+              <p class="font-semibold">Paid</p>
+              <p class="text-sm text-slate-500">${inv.paid_at ? formatDate(inv.paid_at) : ''}</p>
+            </div>
+          </div>
+        `;
+      } else {
+        markPaidBtn.classList.remove('hidden');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const dueDate = new Date(inv.due_date);
+        const isOverdue = dueDate < today;
+        
+        statusCard.innerHTML = `
+          <div class="flex items-center gap-3 ${isOverdue ? 'text-rose-600' : 'text-amber-600'}">
+            <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            <div>
+              <p class="font-semibold">${isOverdue ? 'Overdue' : 'Pending'}</p>
+              <p class="text-sm text-slate-500">Due ${formatDate(inv.due_date)}</p>
+            </div>
+          </div>
+        `;
+      }
+    }
+    
+    function editCurrentInvoice() {
+      const invoice = allData.find(i => i.__backendId === currentInvoiceId);
+      if (!invoice) return;
+      
+      editingInvoiceId = currentInvoiceId;
+      
+      // Fill form
+      document.getElementById('client_name').value = invoice.client_name;
+      document.getElementById('client_email').value = invoice.client_email;
+      document.getElementById('client_company').value = invoice.client_company || '';
+      document.getElementById('invoice_number').value = invoice.invoice_number;
+      document.getElementById('due_date').value = invoice.due_date;
+      document.getElementById('project_name').value = invoice.project_name || '';
+      document.getElementById('status').value = invoice.status;
+      document.getElementById('notes').value = invoice.notes || '';
+      
+      // Fill line items
+      const items = JSON.parse(invoice.items || '[]');
+      document.getElementById('line-items').innerHTML = '';
+      lineItemCount = 0;
+      
+      if (items.length === 0) {
+        addLineItem();
+      } else {
+        items.forEach((item, i) => {
+          addLineItem();
+          const index = i;
+          document.querySelector(`[name="item_desc_${index}"]`).value = item.description || '';
+          document.querySelector(`[name="item_qty_${index}"]`).value = item.quantity || 1;
+          document.querySelector(`[name="item_rate_${index}"]`).value = item.rate || 0;
+        });
+      }
+      
+      document.getElementById('create-title').textContent = 'Edit Invoice';
+      updatePreview();
+      showView('create');
+    }
+    
+    async function markAsPaid() {
+      const invoice = allData.find(i => i.__backendId === currentInvoiceId);
+      if (!invoice) return;
+      
+      const btn = document.getElementById('mark-paid-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="animate-pulse">Processing...</span>';
+      
+      try {
+        const result = await window.dataSdk.update({
+          ...invoice,
+          status: 'paid',
+          paid_at: new Date().toISOString()
+        });
+        
+        if (result.isOk) {
+          showToast('Invoice marked as paid!');
+        } else {
+          showToast('Failed to update invoice', 'error');
+        }
+      } catch (err) {
+        showToast('An error occurred', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          Mark as Paid
+        `;
+      }
+    }
+    
+    function confirmDeleteInvoice() {
+      const btn = document.getElementById('delete-invoice-btn');
+      if (btn.dataset.confirming === 'true') {
+        deleteInvoice();
+      } else {
+        btn.dataset.confirming = 'true';
+        btn.innerHTML = `
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+          </svg>
+          Click to Confirm
+        `;
+        setTimeout(() => {
+          btn.dataset.confirming = 'false';
+          btn.innerHTML = `
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+            </svg>
+            Delete Invoice
+          `;
+        }, 3000);
+      }
+    }
+    
+    async function deleteInvoice() {
+      const invoice = allData.find(i => i.__backendId === currentInvoiceId);
+      if (!invoice) return;
+      
+      const btn = document.getElementById('delete-invoice-btn');
+      btn.disabled = true;
+      btn.innerHTML = '<span class="animate-pulse">Deleting...</span>';
+      
+      try {
+        const result = await window.dataSdk.delete(invoice);
+        if (result.isOk) {
+          showToast('Invoice deleted');
+          currentInvoiceId = null;
+          showView('invoices');
+        } else {
+          showToast('Failed to delete invoice', 'error');
+        }
+      } catch (err) {
+        showToast('An error occurred', 'error');
+      } finally {
+        btn.disabled = false;
+        btn.dataset.confirming = 'false';
+      }
+    }
+    
+    // PDF Export
+    function exportPDF() {
+      showToast('Generating PDF preview...');
+      setTimeout(() => {
+        window.print();
+      }, 500);
+    }
+    
+    function exportDetailPDF() {
+      exportPDF();
+    }
+    
+    // Helpers
+    function formatCurrency(amount) {
+      return new Intl.NumberFormat('en-US', {
+        style: 'currency',
+        currency: 'USD'
+      }).format(amount || 0);
+    }
+    
+    function formatDate(dateStr) {
+      if (!dateStr) return '--';
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+    
+    function getInitials(name) {
+      if (!name) return '?';
+      return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+    }
+    
+    function getStatusLabel(inv) {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      if (inv.status === 'paid') return 'Paid';
+      if (inv.status === 'draft') return 'Draft';
+      if (new Date(inv.due_date) < today) return 'Overdue';
+      return 'Pending';
+    }
+    
+    function getStatusClass(inv) {
+      const status = getStatusLabel(inv).toLowerCase();
+      const classes = {
+        paid: 'bg-emerald-50 text-emerald-700',
+        pending: 'bg-amber-50 text-amber-700',
+        draft: 'bg-slate-100 text-slate-600',
+        overdue: 'bg-rose-50 text-rose-700'
+      };
+      return classes[status] || classes.pending;
+    }
+    
+    function escapeHtml(str) {
+      if (!str) return '';
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+    
+    function showToast(message, type = 'success') {
+      const toast = document.getElementById('toast');
+      const toastMessage = document.getElementById('toast-message');
+      const toastIcon = document.getElementById('toast-icon');
+      
+      toastMessage.textContent = message;
+      
+      if (type === 'error') {
+        toastIcon.classList.remove('text-emerald-400');
+        toastIcon.classList.add('text-rose-400');
+        toastIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>';
+      } else {
+        toastIcon.classList.remove('text-rose-400');
+        toastIcon.classList.add('text-emerald-400');
+        toastIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>';
+      }
+      
+      toast.classList.remove('translate-y-20', 'opacity-0');
+      
+      setTimeout(() => {
+        toast.classList.add('translate-y-20', 'opacity-0');
+      }, 3000);
+    }
+    
+    // Form listeners
+    document.getElementById('client_name').addEventListener('input', updatePreview);
+    document.getElementById('client_email').addEventListener('input', updatePreview);
+    document.getElementById('invoice_number').addEventListener('input', updatePreview);
+    document.getElementById('due_date').addEventListener('input', updatePreview);
+    document.getElementById('notes').addEventListener('input', updatePreview);
+    
+    // Initialize
+    init();
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9c9281d727845456',t:'MTc3MDI5NTU1MC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
+   
